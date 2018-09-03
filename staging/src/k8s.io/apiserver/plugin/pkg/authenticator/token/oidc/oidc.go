@@ -145,6 +145,7 @@ func New(opts Options) (*Authenticator, error) {
 
 			verifier := provider.Verifier(config)
 			a.setVerifier(verifier)
+			glog.Infof("initialized oidc authenticator %s", a.issuerURL)
 			return true, nil
 		}, ctx.Done())
 	})
@@ -192,6 +193,7 @@ func newAuthenticator(opts Options, initVerifier func(ctx context.Context, a *Au
 
 	var roots *x509.CertPool
 	if opts.CAFile != "" {
+		glog.Infof("oidc using CA file %s", opts.CAFile)
 		roots, err = certutil.NewPool(opts.CAFile)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to read the CA file: %v", err)
@@ -259,6 +261,7 @@ func hasCorrectIssuer(iss, tokenData string) bool {
 }
 
 func (a *Authenticator) AuthenticateToken(token string) (user.Info, bool, error) {
+	glog.Infof("authenticating token is %s", token)
 	if !hasCorrectIssuer(a.issuerURL, token) {
 		return nil, false, nil
 	}

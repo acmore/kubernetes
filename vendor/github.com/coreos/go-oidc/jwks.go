@@ -11,6 +11,7 @@ import (
 
 	"github.com/pquerna/cachecontrol"
 	jose "gopkg.in/square/go-jose.v2"
+	"github.com/golang/glog"
 )
 
 // keysExpiryDelta is the allowed clock skew between a client and the OpenID Connect
@@ -108,6 +109,7 @@ func (r *remoteKeySet) verify(ctx context.Context, jws *jose.JSONWebSignature) (
 		keyID = sig.Header.KeyID
 		break
 	}
+	glog.Infof("verifying signature, keyid %s", keyID)
 
 	keys, expiry := r.keysFromCache()
 
@@ -115,6 +117,7 @@ func (r *remoteKeySet) verify(ctx context.Context, jws *jose.JSONWebSignature) (
 	for _, key := range keys {
 		if keyID == "" || key.KeyID == keyID {
 			if payload, err := jws.Verify(&key); err == nil {
+				glog.Infof("verified with keyid %s", key.KeyID)
 				return payload, nil
 			}
 		}
@@ -130,9 +133,11 @@ func (r *remoteKeySet) verify(ctx context.Context, jws *jose.JSONWebSignature) (
 		return nil, fmt.Errorf("fetching keys %v", err)
 	}
 
+	glog.Infof("getting %d keys from remote", len(keys))
 	for _, key := range keys {
 		if keyID == "" || key.KeyID == keyID {
 			if payload, err := jws.Verify(&key); err == nil {
+				glog.Infof("verified with keyid %s", key.KeyID)
 				return payload, nil
 			}
 		}
